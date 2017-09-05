@@ -1,51 +1,56 @@
-//Loading colors module to make display more readable, made global
-var colors = require('colors');
+var protocol = (process.argv[2] === undefined || (process.argv[2] !== 'http' && process.argv[2] !== 'https')) ? 'http' : process.argv[2];
+var port = process.argv[3] === undefined ? 80 : parseInt(process.argv[3]);
+
+var logs = require('./logs');
 
 //loading express
-process.stdout.write("Loading express....");
+logs.log("Loading express....");
 try {
     var express = require('express');
     var app = express();
-    process.stdout.write(colors.green('OK\n'));
+    logs.success('OK\n');
 } catch (exception) {
-    process.stdout.write(colors.red('NOK\n'));
+    logs.error('NOK\n');
     process.exit(1);
 }
 
 //loading http server
-process.stdout.write("Loading https server....");
+logs.log("Loading "+ protocol +" server....");
 try {
-    var server = require('https').createServer(app);
-    process.stdout.write(colors.green('OK\n'));
+    var server = require(protocol).createServer(app);
+    logs.success('OK\n');
 } catch (exception) {
-    process.stdout.write(colors.red('NOK\n'));
+    logs.error('NOK\n');
     process.exit(1);
 }
 
 
 //Using ejs as a templating engine
-process.stdout.write('Loading ejs templating engine....');
+logs.log('Loading ejs templating engine....');
 try {
     var engine = require('ejs-locals');
     var path = require("path");
     app.set('views', path.join(__dirname, 'views'));
     app.engine('ejs', engine);
     app.set('view engine', 'ejs');
-    process.stdout.write(colors.green('OK\n'));
+    logs.success('OK\n');
 } catch (exception) {
-    process.stdout.write(colors.red('NOK : ' + exception.message +  '\n'));
+    logs.error('NOK : ' + exception.message +  '\n');
     process.exit(1);
 }
 
 //Loading routes
-process.stdout.write('Loading routes....');
+logs.log('Loading routes....');
 try {
     var routes = require('./routes')(app);
-    process.stdout.write(colors.green('OK\n'));
+    logs.success('OK\n');
 } catch (exception) {
-    process.stdout.write(colors.red('NOK\n'));
+    logs.error('NOK\n');
     process.exit(1);
 }
 
-process.stdout.write(colors.yellow('Listening on port 3000...\n'));
-server.listen(3000);
+logs.info('Listening on port '+ port +'...');
+server.listen(port).on('error', function(err) {
+    logs.error('NOK\n');
+    logs.error(err + '\n');
+});
